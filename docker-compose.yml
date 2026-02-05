@@ -1,0 +1,63 @@
+x-common-environment: &common-env
+  TZ: "Asia/Shanghai"
+  MODPACK_PLATFORM: AUTO_CURSEFORGE
+  CF_API_KEY: ${CF_API_KEY}
+  CF_SLUG: ${PACK_SLUG}
+  CF_MODPACK_ZIP: ${MODPACK_ZIP}
+
+  CF_OVERRIDES_SKIP_EXISTING: true
+  # CF_FORCE_SYNCHRONIZE: true
+  CF_EXCLUDE_INCLUDE_FILE: /config/cf-exclude-include.json
+  CURSEFORGE_FILES: |
+    prometheus-exporter
+  CF_EXCLUDE_MODS: | 
+    imblocker
+    minemenu
+    simple-discord-rpc
+    audio-extension-for-fancymenu-forge
+    video-extension-for-fancymenu-forge
+    fancyvideo-api
+  CF_OVERRIDES_EXCLUSIONS: | 
+    mods/gnetum*.jar
+
+  ENABLE_WHITELIST: true
+  WHITELIST: ${WHITELIST_USERS}
+  RCON_PASSWORD: ${RCON_PASSWORD}
+
+  EULA: true
+  MAX_PLAYERS: 5
+  ALLOW_FLIGHT: true
+  DIFFICULTY: "hard"
+  PVP: false
+
+x-common-volumes: &common-volumes
+  - ./data/${PACK_SLUG}:/data
+  - ./modpacks:/modpacks:ro
+  - ./downloads:/downloads
+  - ./config:/config:ro
+
+services:
+  mc-install:
+    profiles: ["install"]
+    image: itzg/minecraft-server:java${JAVA_VERSION}
+    environment:
+      <<: *common-env
+
+      MEMORY: "4G"
+      SETUP_ONLY: true
+    volumes: *common-volumes
+
+  mc-server:
+    profiles: ["run"]
+    image: itzg/minecraft-server:java${JAVA_VERSION}-graalvm
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+    ports:
+      - "25565:25565"
+      - "19565:19565"
+    environment:
+      <<: *common-env
+
+      MEMORY: "16G"
+    volumes: *common-volumes
